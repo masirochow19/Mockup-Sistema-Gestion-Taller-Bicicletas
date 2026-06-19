@@ -12,10 +12,12 @@ import { PrintSection } from './components/PrintSection';
 import { NotificationsSection } from './components/NotificationsSection';
 import { OrdersModal } from './components/OrdersModal';
 import { Dashboard } from './components/Dashboard';
+import { SuccessModal } from './components/SuccessModal';
+import { TrackingPortal } from './components/TrackingPortal';
 import { Button } from './components/ui/button';
 import {
   Save, RefreshCw, Printer, X, FileText,
-  LayoutDashboard, ClipboardList, ChevronRight
+  LayoutDashboard, ClipboardList, ChevronRight, Globe
 } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
 
@@ -90,7 +92,7 @@ function todayFormatted() {
   });
 }
 
-function App() {
+export default function App() {
   const [view, setView] = useState<View>('dashboard');
   const [formData, setFormData] = useState<FormData>({
     orderNumber: generateOrderNumber(),
@@ -99,6 +101,8 @@ function App() {
   });
   const [rutError, setRutError] = useState('');
   const [showOrdersModal, setShowOrdersModal] = useState(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [lastSavedOrder, setLastSavedOrder] = useState<FormData | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -257,7 +261,8 @@ function App() {
         description: `Orden ${formData.orderNumber} registrada en base de datos`,
       });
 
-      resetForm();
+      setLastSavedOrder(formData);
+      setIsSuccessModalOpen(true);
     } catch (error: any) {
       console.error('Error al guardar:', error);
       toast.error('Error al guardar la orden', {
@@ -304,69 +309,84 @@ function App() {
 
   const totalParts = formData.parts.reduce((sum, part) => sum + part.quantity * part.price, 0);
 
-  const navItems: { id: View; label: string; icon: typeof LayoutDashboard }[] = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'form', label: 'Nueva Orden', icon: ClipboardList },
-  ];
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-gray-50 to-emerald-50/30">
       <Toaster position="top-right" richColors expand={false} />
 
-      {/* Header */}
-      <header className="bg-gradient-to-r from-slate-800 via-slate-750 to-slate-700 shadow-xl sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo + Title */}
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 bg-emerald-500 rounded-xl flex items-center justify-center shadow-lg">
-                <BicicletasLogo />
-              </div>
-              <div>
-                <h1 className="text-white font-bold text-base leading-tight">
-                  Taller de Bicicletas
-                </h1>
-                <p className="text-emerald-400 text-xs leading-tight">Sistema de Gestión</p>
-              </div>
-            </div>
+      {view === 'tracking' && <TrackingPortal />}
 
-            {/* Navigation */}
-            <nav className="flex items-center gap-1">
-              {navItems.map(item => (
+      {view !== 'tracking' && (
+        <header className="bg-gradient-to-r from-slate-800 via-slate-750 to-slate-700 shadow-xl sticky top-0 z-40">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="flex items-center justify-between h-16">
+              {/* Logo + Title */}
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 bg-emerald-500 rounded-xl flex items-center justify-center shadow-lg">
+                  <BicicletasLogo />
+                </div>
+                <div>
+                  <h1 className="text-white font-bold text-base leading-tight">
+                    Taller de Bicicletas
+                  </h1>
+                  <p className="text-emerald-400 text-xs leading-tight">Sistema de Gestión</p>
+                </div>
+              </div>
+
+              {/* Navigation */}
+              <nav className="flex items-center gap-1">
                 <button
-                  key={item.id}
-                  onClick={() => setView(item.id)}
+                  onClick={() => setView('dashboard')}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    view === item.id
+                    view === 'dashboard'
                       ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/25'
                       : 'text-slate-300 hover:text-white hover:bg-white/10'
                   }`}
                 >
-                  <item.icon className="w-4 h-4" />
-                  {item.label}
+                  <LayoutDashboard className="w-4 h-4" />
+                  Dashboard
                 </button>
-              ))}
-            </nav>
+                
+                <button
+                  onClick={() => setView('form')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    view === 'form'
+                      ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/25'
+                      : 'text-slate-300 hover:text-white hover:bg-white/10'
+                  }`}
+                >
+                  <ClipboardList className="w-4 h-4" />
+                  Nueva Orden
+                </button>
 
-            {/* Right side */}
-            <div className="flex items-center gap-3">
-              <Button
-                onClick={() => setShowOrdersModal(true)}
-                variant="outline"
-                size="sm"
-                className="border-slate-500 text-slate-200 hover:bg-white/10 hover:text-white hover:border-slate-400 bg-transparent h-9"
-              >
-                <FileText className="w-4 h-4 mr-2" />
-                Ver Órdenes
-              </Button>
-              <div className="text-right border-l border-slate-600 pl-3">
-                <div className="text-xs text-slate-400">Fecha</div>
-                <div className="text-sm text-white font-medium">{formData.entryDate}</div>
+                <button
+                  onClick={() => setView('tracking')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all text-emerald-400 hover:text-emerald-300 hover:bg-white/10`}
+                >
+                  <Globe className="w-4 h-4" />
+                  Portal Clientes
+                </button>
+              </nav>
+
+              {/* Right side */}
+              <div className="flex items-center gap-3">
+                <Button
+                  onClick={() => setShowOrdersModal(true)}
+                  variant="outline"
+                  size="sm"
+                  className="border-slate-500 text-slate-200 hover:bg-white/10 hover:text-white hover:border-slate-400 bg-transparent h-9"
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  Ver Órdenes
+                </Button>
+                <div className="text-right border-l border-slate-600 pl-3">
+                  <div className="text-xs text-slate-400">Fecha</div>
+                  <div className="text-sm text-white font-medium">{formData.entryDate}</div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
+      )}
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">
@@ -469,6 +489,15 @@ function App() {
                   <X className="w-4 h-4 mr-2" />
                   Cerrar Orden
                 </Button>
+
+                <Button 
+                  onClick={handleSave} 
+                  disabled={isSaving}
+                  className="bg-gray-900 hover:bg-gray-800 text-white h-12 flex-1 text-lg font-medium shadow-md transition-all hover:shadow-lg disabled:opacity-50"
+                >
+                  <Save className="w-5 h-5 mr-2" />
+                  {isSaving ? 'Guardando...' : 'Guardar Orden'}
+                </Button>
               </div>
             </div>
           </div>
@@ -510,8 +539,20 @@ function App() {
           toast.info('Orden cargada', { description: `Orden ${order.order_number} lista para editar` });
         }}
       />
+
+      <SuccessModal
+        isOpen={isSuccessModalOpen}
+        onClose={() => {
+          setIsSuccessModalOpen(false);
+          resetForm();
+          setView('dashboard');
+        }}
+        onNewOrder={() => {
+          setIsSuccessModalOpen(false);
+          resetForm();
+        }}
+        savedOrder={lastSavedOrder}
+      />
     </div>
   );
 }
-
-export default App;
