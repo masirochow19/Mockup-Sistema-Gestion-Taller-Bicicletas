@@ -17,9 +17,10 @@ import { TrackingPortal } from './components/TrackingPortal';
 import { Button } from './components/ui/button';
 import {
   Save, RefreshCw, Printer, X, FileText,
-  LayoutDashboard, ClipboardList, ChevronRight, Globe
+  LayoutDashboard, ClipboardList, ChevronRight, Globe, Tag
 } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
+import { handlePrintLabel, handlePrintVoucher } from '../lib/orderActions';
 
 interface Part {
   id: string;
@@ -313,7 +314,7 @@ export default function App() {
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-gray-50 to-emerald-50/30">
       <Toaster position="top-right" richColors expand={false} />
 
-      {view === 'tracking' && <TrackingPortal />}
+      {view === 'tracking' && <TrackingPortal onBackToMenu={() => setView('dashboard')} />}
 
       {view !== 'tracking' && (
         <header className="bg-gradient-to-r from-slate-800 via-slate-750 to-slate-700 shadow-xl sticky top-0 z-40">
@@ -389,8 +390,9 @@ export default function App() {
       )}
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        {view === 'dashboard' ? (
+      {view !== 'tracking' && (
+        <main className="max-w-7xl mx-auto px-6 py-8">
+          {view === 'dashboard' ? (
           <Dashboard onNewOrder={() => setView('form')} />
         ) : (
           <div className="space-y-6">
@@ -473,12 +475,21 @@ export default function App() {
                 </Button>
 
                 <Button
-                  onClick={() => toast.info('Usa los botones de impresión en las secciones anteriores')}
+                  onClick={() => handlePrintLabel({ ...formData, orderNumber: formData.orderNumber })}
                   variant="outline"
-                  className="h-12"
+                  className="h-12 border-gray-300 text-gray-700 hover:bg-gray-50"
+                >
+                  <Tag className="w-4 h-4 mr-2" />
+                  Etiqueta
+                </Button>
+
+                <Button
+                  onClick={() => handlePrintVoucher({ ...formData, orderNumber: formData.orderNumber })}
+                  variant="outline"
+                  className="h-12 border-gray-300 text-gray-700 hover:bg-gray-50"
                 >
                   <Printer className="w-4 h-4 mr-2" />
-                  Imprimir Docs
+                  Voucher
                 </Button>
 
                 <Button
@@ -487,25 +498,18 @@ export default function App() {
                   className="h-12 border-red-300 text-red-600 hover:bg-red-50"
                 >
                   <X className="w-4 h-4 mr-2" />
-                  Cerrar Orden
-                </Button>
-
-                <Button 
-                  onClick={handleSave} 
-                  disabled={isSaving}
-                  className="bg-gray-900 hover:bg-gray-800 text-white h-12 flex-1 text-lg font-medium shadow-md transition-all hover:shadow-lg disabled:opacity-50"
-                >
-                  <Save className="w-5 h-5 mr-2" />
-                  {isSaving ? 'Guardando...' : 'Guardar Orden'}
+                  Cerrar
                 </Button>
               </div>
             </div>
           </div>
         )}
-      </main>
+        </main>
+      )}
 
       {/* Footer */}
-      <footer className="mt-12 border-t border-gray-200 bg-white">
+      {view !== 'tracking' && (
+        <footer className="mt-12 border-t border-gray-200 bg-white">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between text-sm text-gray-500">
           <span>Sistema de Gestión de Taller de Bicicletas © 2026</span>
           <span className="flex items-center gap-1.5">
@@ -514,6 +518,7 @@ export default function App() {
           </span>
         </div>
       </footer>
+      )}
 
       {/* Orders Modal */}
       <OrdersModal

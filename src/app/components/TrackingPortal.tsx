@@ -4,7 +4,7 @@ import { Search, Bike, Clock, Wrench, CheckCircle2, ChevronRight, AlertCircle } 
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 
-export function TrackingPortal() {
+export function TrackingPortal({ onBackToMenu }: { onBackToMenu: () => void }) {
   const [orderNumber, setOrderNumber] = useState('');
   const [rut, setRut] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -67,12 +67,22 @@ export function TrackingPortal() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <header className="bg-white border-b border-gray-200 py-4 px-6 text-center">
-        <h1 className="text-xl font-bold text-gray-900 flex items-center justify-center gap-2">
-          <Bike className="text-emerald-600" />
-          Taller de Bicicletas
-        </h1>
-        <p className="text-sm text-gray-500 mt-1">Portal de Seguimiento</p>
+      <header className="bg-white border-b border-gray-200 py-4 px-6 relative">
+        <Button 
+          variant="ghost" 
+          onClick={onBackToMenu}
+          className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-900"
+        >
+          <ChevronRight className="w-5 h-5 mr-1 rotate-180" />
+          <span className="hidden sm:inline">Volver al Panel</span>
+        </Button>
+        <div className="text-center">
+          <h1 className="text-xl font-bold text-gray-900 flex items-center justify-center gap-2">
+            <Bike className="text-emerald-600" />
+            Taller de Bicicletas
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">Portal de Seguimiento</p>
+        </div>
       </header>
 
       <main className="flex-1 max-w-lg w-full mx-auto p-6">
